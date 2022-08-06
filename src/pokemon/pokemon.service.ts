@@ -73,10 +73,20 @@ export class PokemonService {
     }
   }
 
-  async remove(id: string) {
+  async remove(_id: string) {
     // const pokemon = await this.findOne(id);
     // await pokemon.deleteOne();
     //await this.PokemonModel.findByIdAndDelete(id);
+    // const results = await this.PokemonModel.findByIdAndDelete(id);
+    // if (!results) {
+    //   throw new BadRequestException(`No se encontro un pokemon con el id`);
+    // }
+    // return results;
+    const { deletedCount } = await this.PokemonModel.deleteOne({ _id });
+    if (deletedCount === 0) {
+      throw new BadRequestException(`No se encontro un pokemon con el id`);
+    }
+    return;
   }
 
   private handleExceptions(error: any) {
