@@ -37,8 +37,8 @@ export class PokemonService {
     }
   }
 
-  findAll() {
-    return `This action returns all pokemon`;
+  async findAll() {
+    return await this.PokemonModel.find();
   }
 
   async findOne(term: string) {
@@ -49,7 +49,7 @@ export class PokemonService {
         pokemon = await this.PokemonModel.findOne({ no: term });
       }
 
-      if (isValidObjectId(term)) {
+      if (!pokemon && isValidObjectId(term)) {
         pokemon = await this.PokemonModel.findById(term);
       }
       if (!pokemon) {
@@ -63,7 +63,6 @@ export class PokemonService {
           `Pokemon with,id,name of no ${term} not found`,
         );
       }
-
       return pokemon;
     } catch (error) {
       console.log(error);
@@ -71,8 +70,26 @@ export class PokemonService {
     }
   }
 
-  update(id: string, updatePokemonDto: UpdatePokemonDto) {
-    return `This action updates a #${id} pokemon`;
+  async update(term: string, updatePokemonDto: UpdatePokemonDto) {
+    const pokemon = await this.findOne(term);
+    try {
+      if (updatePokemonDto.name) {
+        updatePokemonDto.name = updatePokemonDto.name.toLowerCase();
+      }
+      await pokemon.updateOne(updatePokemonDto);
+      return { ...pokemon.toJSON(), ...updatePokemonDto };
+    } catch (error) {
+      const { code, keyValue } = error;
+      if (code === 11000) {
+        throw new BadRequestException(
+          `Pokemon exists in db ${JSON.stringify(keyValue)}`,
+        );
+      }
+      console.log(error);
+      throw new InternalServerErrorException(
+        `Can t create Pokemon -Check server log`,
+      );
+    }
   }
 
   remove(id: string) {
